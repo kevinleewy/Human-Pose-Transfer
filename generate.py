@@ -53,5 +53,6 @@ def make_engine(generator_name, config, device=torch.device("cuda")):
 
 def run(config):
     train_data_loader = get_data_loader(config)
-    engine = make_engine(config["engine"], config)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    engine = make_engine(config["engine"], config, device)
     engine.run(train_data_loader, max_epochs=1)

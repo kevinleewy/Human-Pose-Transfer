@@ -83,7 +83,8 @@ def save_config(config, output_folder):
 def main():
     options = parse_argument()
 
-    prepare_gpu(options.gpu_id)
+    if torch.cuda.is_available():
+        prepare_gpu(options.gpu_id)
 
     config = load_config(options.config, options.toml)
     config["output"] = options.output

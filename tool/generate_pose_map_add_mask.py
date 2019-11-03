@@ -17,14 +17,16 @@ LIMB_SEQ = [[1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9],
             [0, 15], [15, 17], [2, 16], [5, 17]]
 
 
-def load_annotations_from_file(annotations_file_path):
+def load_annotations_from_file(annotations_file_path, offset):
     with open(annotations_file_path, "r") as f:
         f_csv = csv.reader(f, delimiter=":")
         next(f_csv)
         annotations_data = []
         for row in f_csv:
-            annotations_data.append((row[0], np.concatenate([np.expand_dims(json.loads(row[1]), -1),
-                                                             np.expand_dims(json.loads(row[2]), -1)], axis=1)))
+            annotations_data.append((row[0], np.concatenate([
+                np.expand_dims(json.loads(row[1]), -1) + offset[1],
+                np.expand_dims(json.loads(row[2]), -1) + offset[0]
+            ], axis=1)))
         return annotations_data
 
 
@@ -84,8 +86,8 @@ def key_point_to_map(key_points, img_size, sigma=6):
     return map_image
 
 
-def compute_pose(annotations_file_path, map_save_path, mask_save_path, image_size):
-    annotations_data = load_annotations_from_file(annotations_file_path)
+def compute_pose(annotations_file_path, map_save_path, mask_save_path, image_size, offset):
+    annotations_data = load_annotations_from_file(annotations_file_path, offset)
     annotations_count = len(annotations_data)
     for i, item in enumerate(annotations_data):
         if i % 100 == 0:
@@ -98,19 +100,24 @@ def compute_pose(annotations_file_path, map_save_path, mask_save_path, image_siz
         np.save(os.path.join(mask_save_path, img_name + ".npy"), pose_mask)
 
 
-def main(dataset, d_type):
+def main(dataset, d_type, pose_offset):
+
+    image_size = (128, 64) if dataset == "market" else (256, 256)
+
     annotations_file_path = "data/{dataset}/annotation-{type}.csv".format(dataset=dataset, type=d_type)
     pose_map_save_path = "data/{dataset}/{type}/pose_map_image/".format(dataset=dataset, type=d_type)
     pose_mask_save_path = "data/{dataset}/{type}/pose_mask_image/".format(dataset=dataset, type=d_type)
 
     os.makedirs(pose_mask_save_path, exist_ok=True)
     os.makedirs(pose_map_save_path, exist_ok=True)
-    compute_pose(annotations_file_path, pose_map_save_path, pose_mask_save_path, (128, 64))
+    compute_pose(annotations_file_path, pose_map_save_path, pose_mask_save_path, image_size, pose_offset)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='generate 18-channels pose image and use pose to draw mask')
     parser.add_argument("--dataset", type=str, default="market")
     parser.add_argument("--type", type=str, default="train")
+    parser.add_argument("--x_offset", type=int, default=0)
+    parser.add_argument("--y_offset", type=int, default=0)
     opt = parser.parse_args()
-    main(opt.dataset, opt.type)
+    main(opt.dataset, opt.type, (opt.x_offset, opt.y_offset))

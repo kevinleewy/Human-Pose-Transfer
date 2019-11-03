@@ -18,6 +18,9 @@
 * numpy
 * tqdm
 
+```
+pip install -r requirements.txt
+```
 
 ### DataSet
 
@@ -37,6 +40,17 @@ Finally, your `./data` folder looks like:
 
 ```text
 data
+├── fashion
+│   ├── annotation-test.csv
+│   ├── annotation-train.csv
+│   ├── pairs-test.csv
+│   ├── pairs-train.csv
+│   ├── test # WILL BE GENERATED IN NEXT STEP
+│   │   ├── pose_map_image
+│   │   └── pose_mask_image
+│   └── train # WILL BE GENERATED IN NEXT STEP
+│       ├── pose_map_image
+│       └── pose_mask_image
 ├── market
 │   ├── annotation-test.csv
 │   ├── annotation-train.csv
@@ -58,8 +72,10 @@ data
 
 ### Generate Pose 18-channels image and corresponding mask
 
-1. `python3 tool/generate_pose_map_add_mask.py --type train`
-2. `python3 tool/generate_pose_map_add_mask.py --type test`
+1. `python3 tool/generate_pose_map_add_mask.py --dataset fashion --type train --x_offset 40`
+2. `python3 tool/generate_pose_map_add_mask.py --dataset fashion --type test --x_offset 40`
+3. `python3 tool/generate_pose_map_add_mask.py --dataset market --type train`
+4. `python3 tool/generate_pose_map_add_mask.py --dataset market --type test`
 
 ## Train & Test
 
