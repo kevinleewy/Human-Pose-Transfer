@@ -87,7 +87,7 @@ Whether it is training or testing, it can be seen as an `engine`, and some repet
 
 the usage of `run.py`:
 ```bash
-$./run.py -h
+$python3 run.py -h
 usage: Train [-h] -g GPU_ID -c CONFIG -o OUTPUT [-t TOML]
              {PG2-1,PG2-2,PG2-Generator}
 
@@ -115,17 +115,17 @@ tensorboard --logdir ./checkpoints/PG2-1 --port 8000
 
 ### example
 ```bash
-# ./run.py <engine_name> -g <gpu_id> -c </path/to/config> -o </path/to/checkpoint>
+# python3 run.py <engine_name> -g <gpu_id> -c </path/to/config> -o </path/to/checkpoint>
 # start to train PG2 stage1.
-./run.py PG2-1 -g 1 -c ./implementations/PG2/stage1.toml -o ./checkpoints/PG2-1
+python3 run.py PG2-1 -g 1 -c ./implementations/PG2/stage1.toml -o ./checkpoints/PG2-1
 # the way to generated images
-./run.py PG2-Generator -g 1 -c ./implementations/PG2/stage2.toml -o ./generated_images/PG2
+python3 run.py PG2-Generator -g 1 -c ./implementations/PG2/stage2.toml -o ./generated_images/PG2
 ```
 
 I use `TOML` as the config format, and you can overwrite the config file with cli arg like this:
 
 ```bash
-./run.py PG2-1 -g 1 -c ./implementations/PG2/stage1.toml -o ./checkpoints/PG2-1 \
+python3 run.py PG2-1 -g 1 -c ./implementations/PG2/stage1.toml -o ./checkpoints/PG2-1 \
         -t "loss.mask_l1.weight=20" -t "train.data.replacement=true"
 ``` 
 
@@ -134,7 +134,7 @@ So, if you wang to specified generated images amount(default: full/12000), you c
 the full command example:
 
 ```bash
-./run.py PG2-Generator -g 1 -c ./implementations/PG2/stage2.toml -t "generated_limit=100"  -t "model.generator1.pretrained_path='./checkpoint/PG2-1/network_G1_26000.pth'" -t "model.generator2.pretrained_path='./checkpoint/PG2-2_26000/network_G2_13000.pth'" -o generated_images
+python3 run.py PG2-Generator -g 1 -c ./implementations/PG2/stage2.toml -t "generated_limit=100"  -t "model.generator1.pretrained_path='./checkpoint/PG2-1/network_G1_26000.pth'" -t "model.generator2.pretrained_path='./checkpoint/PG2-2_26000/network_G2_13000.pth'" -o generated_images
 ```
 
 ## Implement result
@@ -143,11 +143,11 @@ the full command example:
 
 First, please change `dataset.path.train.image` in `./implementations/PG2/stage[1|2].toml`
 
-train stage 1: `./run.py PG2-1 --gpu_id 0 -c ./implementations/PG2/stage1.toml -o ./checkpoints/PG2-1`
+train stage 1: `python3 run.py PG2-1 --gpu_id 0 -c ./implementations/PG2/stage1.toml -o ./checkpoints/PG2-1`
 
-train stage 2: `./run.py PG2-2 -g 2 -c ./implementations/PG2/stage2.toml -o ./checkpoints/PG2-2`
+train stage 2: `python3 run.py PG2-2 -g 2 -c ./implementations/PG2/stage2.toml -o ./checkpoints/PG2-2`
 
-generate images: `./run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images -g 3`
+generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images -g 3`
 
 generate a grid image as example: `python tool/generate_grid.py -r ./generated_images -o images.jpg`
 
@@ -165,9 +165,9 @@ I also provided the tensorboard log file.
 # download&extract files above.
 unzip weights.zip
 # generate all test images
-./run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images -g 3  -t "model.generator1.pretrained_path='path/to/weights/G1.pth'" -t "model.generator2.pretrained_path='path/to/weights/G2.pth'"
+python3 run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images -g 3  -t "model.generator1.pretrained_path='path/to/weights/G1.pth'" -t "model.generator2.pretrained_path='path/to/weights/G2.pth'"
 # random select some images to display
-`python tool/generate_grid.py -r ./generated_images -o images.jpg`
+`python3 tool/generate_grid.py -r ./generated_images -o images.jpg`
 # see training logs and images.
 tensorboard --logdir path/to/weights/train2 --port 8080
 ```

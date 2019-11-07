@@ -96,7 +96,7 @@ def get_trainer(config, device=torch.device("cuda")):
     return trainer
 
 
-def run(config):
+def run(config, device=torch.device("cuda")):
     train_data_loader = get_data_loader(config)
-    trainer = get_trainer(config)
+    trainer = get_trainer(config, device)
     trainer.run(train_data_loader, max_epochs=config["train"]["num_epoch"])

@@ -83,6 +83,7 @@ def save_config(config, output_folder):
 def main():
     options = parse_argument()
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.is_available():
         prepare_gpu(options.gpu_id)
 
@@ -99,7 +100,7 @@ def main():
 
     print("#" * 80, "\n")
 
-    engine.run(config)
+    engine.run(config, device)
 
 
 if __name__ == '__main__':
