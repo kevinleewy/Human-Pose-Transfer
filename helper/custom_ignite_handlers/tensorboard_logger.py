@@ -87,7 +87,7 @@ class OutputHandler(BaseOutputHandler):
 
         metrics = self._setup_output_metrics(engine)
 
-        engine = engine if self.another_engine is None else self.another_engine
+        engine = engine if not hasattr(self, 'another_engine') or self.another_engine is None else self.another_engine
         global_step = self.global_step_transform(engine, event_name)
 
         if not isinstance(global_step, int):
