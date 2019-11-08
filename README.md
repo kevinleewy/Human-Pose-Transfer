@@ -129,7 +129,7 @@ python3 run.py PG2-1 -g 1 -c ./implementations/PG2/stage1.toml -o ./checkpoints/
         -t "loss.mask_l1.weight=20" -t "train.data.replacement=true"
 ``` 
 
-So, if you wang to specified generated images amount(default: full/12000), you can add a option: `-t "generated_limit=100"`
+So, if you want to specify the amount of images to generate(default: full/12000), you can add a option: `-t "generated_limit=100"`
 
 the full command example:
 
