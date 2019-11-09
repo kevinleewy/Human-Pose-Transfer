@@ -57,30 +57,31 @@ def load_generated_images(images_folder):
 
     names = []
     for img_name in os.listdir(images_folder):
-        img = imread(os.path.join(images_folder, img_name))
-        w = 64  # h, w ,c
-        # input_images.append(img[:, :w])
-        # target_images.append(img[:, 2 * w:3 * w])
-        # generated_images.append(img[:, 4 * w:5 * w])
-        input_images.append(img[:, :w])
-        target_images.append(img[:, w:2 * w])
-        generated_images.append(img[:, 2 * w:])
+        if img_name.endswith('jpg'):
+            img = imread(os.path.join(images_folder, img_name))
+            w = 64  # h, w ,c
+            # input_images.append(img[:, :w])
+            # target_images.append(img[:, 2 * w:3 * w])
+            # generated_images.append(img[:, 4 * w:5 * w])
+            input_images.append(img[:, :w])
+            target_images.append(img[:, w:2 * w])
+            generated_images.append(img[:, 2 * w:])
 
-        # assert img_name.endswith('_vis.png'), 'unexpected img name: should end with _vis.png'
-        assert img_name.endswith('_vis.png') or img_name.endswith(
-            '_vis.jpg'), 'unexpected img name: should end with _vis.png'
+            # assert img_name.endswith('_vis.png'), 'unexpected img name: should end with _vis.png'
+            assert img_name.endswith('_vis.png') or img_name.endswith(
+                '_vis.jpg'), 'unexpected img name: should end with _vis.png'
 
-        img_name = img_name[:-8]
-        img_name = img_name.split('___')
-        assert len(img_name) == 2, 'unexpected img split: length 2 expect!'
-        fr = img_name[0]
-        to = img_name[1]
+            img_name = img_name[:-8]
+            img_name = img_name.split('___')
+            assert len(img_name) == 2, 'unexpected img split: length 2 expect!'
+            fr = img_name[0]
+            to = img_name[1]
 
-        # m = re.match(r'([A-Za-z0-9_]*.jpg)_([A-Za-z0-9_]*.jpg)', img_name)
-        # m = re.match(r'([A-Za-z0-9_]*.jpg)_([A-Za-z0-9_]*.jpg)_vis.png', img_name)
-        # fr = m.groups()[0]
-        # to = m.groups()[1]
-        names.append([fr, to])
+            # m = re.match(r'([A-Za-z0-9_]*.jpg)_([A-Za-z0-9_]*.jpg)', img_name)
+            # m = re.match(r'([A-Za-z0-9_]*.jpg)_([A-Za-z0-9_]*.jpg)_vis.png', img_name)
+            # fr = m.groups()[0]
+            # to = m.groups()[1]
+            names.append([fr, to])
 
     return input_images, target_images, generated_images, names
 
