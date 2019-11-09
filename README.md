@@ -149,7 +149,7 @@ train stage 2: `python3 run.py PG2-2 -g 2 -c ./implementations/PG2/stage2.toml -
 
 generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images -g 3`
 
-generate a grid image as example: `python tool/generate_grid.py -r ./generated_images -o images.jpg`
+generate a grid image as example: `python3 tool/generate_grid.py -r ./generated_images -o images.jpg`
 
 ![PG2 result](doc/image/PG2-origin.jpg)
 
