@@ -23,3 +23,7 @@ def make_2d_grid(tensors, padding=0, normalize=True, range=None, scale_each=Fals
     ]
     # merge images in `x` direction.
     return make_grid(grids, padding=0, nrow=len(grids))
+
+#Returns number of trainable parameters in a PyTorch nn.Module
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)    

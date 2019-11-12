@@ -1,7 +1,7 @@
 import torch
 
 from .model import Generator2, Generator1
-
+from helper.misc import count_parameters
 
 def make_generator(config, device=torch.device("cuda")):
     cfg = config["model"]["generator1"]
@@ -14,6 +14,9 @@ def make_generator(config, device=torch.device("cuda")):
     generator2 = Generator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"])
     generator2.to(device)
     generator2.load_state_dict(torch.load(cfg["pretrained_path"], map_location="cpu"))
+
+    print("Generator 1 parameter count: {}".format(count_parameters(generator1)))
+    print("Generator 2 parameter count: {}".format(count_parameters(generator2)))
 
     def generate(batch):
         with torch.no_grad():
