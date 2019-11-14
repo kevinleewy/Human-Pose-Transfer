@@ -12,19 +12,32 @@ from helper.misc import make_2d_grid, custom_global_step_transform
 from .data import get_data_loader, get_val_data_pairs
 from .loss import MaskL1Loss
 from .model import Generator2, Generator1, Discriminator
+from .mobile.model import Generator2  as MobileGenerator2, Generator1 as MobileGenerator1
 
+def get_trainer(config, device=torch.device("cuda"), mobilenet=False):
+    
+    if mobilenet:
+        cfg = config["model"]["generator1"]
+        generator1 = MobileGenerator1(3 + 18, cfg["num_repeat"], cfg["middle_features_dim"],
+                                cfg["channels_base"], cfg["image_size"])
+        generator1.to(device)
+        generator1.load_state_dict(torch.load(cfg["pretrained_path"], map_location="cpu"))
 
-def get_trainer(config, device=torch.device("cuda")):
-    cfg = config["model"]["generator1"]
-    generator1 = Generator1(3 + 18, cfg["num_repeat"], cfg["middle_features_dim"],
-                            cfg["channels_base"], cfg["image_size"])
-    generator1.to(device)
-    generator1.load_state_dict(torch.load(cfg["pretrained_path"], map_location="cpu"))
+        cfg = config["model"]["generator2"]
+        generator2 = MobileGenerator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"], weight_init_way=cfg["weight_init_way"])
+        generator2.to(device)
+        print(generator2)
+    else:
+        cfg = config["model"]["generator1"]
+        generator1 = Generator1(3 + 18, cfg["num_repeat"], cfg["middle_features_dim"],
+                                cfg["channels_base"], cfg["image_size"])
+        generator1.to(device)
+        generator1.load_state_dict(torch.load(cfg["pretrained_path"], map_location="cpu"))
 
-    cfg = config["model"]["generator2"]
-    generator2 = Generator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"], weight_init_way=cfg["weight_init_way"])
-    generator2.to(device)
-    print(generator2)
+        cfg = config["model"]["generator2"]
+        generator2 = Generator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"], weight_init_way=cfg["weight_init_way"])
+        generator2.to(device)
+        print(generator2)
 
     discriminator = Discriminator(weight_init_way=config["model"]["discriminator"]["weight_init_way"])
     discriminator.to(device)
@@ -153,7 +166,7 @@ def get_trainer(config, device=torch.device("cuda")):
     return trainer
 
 
-def run(config, device=torch.device("cuda")):
+def run(config, device=torch.device("cuda"), mobilenet=False):
     train_data_loader = get_data_loader(config)
-    trainer = get_trainer(config, device)
+    trainer = get_trainer(config, device, mobilenet)
     trainer.run(train_data_loader, max_epochs=config["train"]["num_epoch"])

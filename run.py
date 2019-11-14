@@ -49,6 +49,7 @@ def parse_argument():
     parser.add_argument("-c", "--config", type=str, help="config file path", required=True)
     parser.add_argument("-o", "--output", type=str, help="output path", required=True)
     parser.add_argument("-t", "--toml", action="append", type=str, help="overwrite toml config use cli arg")
+    parser.add_argument("-m", "--mobilenet", action='store_true', help="use mobile PG-2")
     options = parser.parse_args()
     return options
 
@@ -100,7 +101,7 @@ def main():
 
     print("#" * 80, "\n")
 
-    engine.run(config, device)
+    engine.run(config, device, options.mobilenet)
 
 
 if __name__ == '__main__':

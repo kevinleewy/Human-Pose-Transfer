@@ -7,18 +7,23 @@ from ignite.metrics import RunningAverage
 from ignite.utils import convert_tensor
 
 from helper.custom_ignite_handlers.tensorboard_logger import TensorboardLogger, OutputHandler, WeightsHistHandler
-from helper.misc import make_2d_grid, custom_global_step_transform
+from helper.misc import make_2d_grid, custom_global_step_transform, count_parameters
 from .data import get_data_loader, get_val_data_pairs
 from .loss import MaskL1Loss
 from .model import Generator1
+from .mobile.model import Generator1 as MobileGenerator1
 
-
-def get_trainer(config, device=torch.device("cuda")):
+def get_trainer(config, device=torch.device("cuda"), mobilenet=False):
     cfg = config["model"]["generator1"]
-    generator1 = Generator1(3 + 18, cfg["num_repeat"], cfg["middle_features_dim"],
+    if mobilenet:
+        generator1 = MobileGenerator1(3 + 18, cfg["num_repeat"], cfg["middle_features_dim"],
+                            cfg["channels_base"], cfg["image_size"])
+    else:    
+        generator1 = Generator1(3 + 18, cfg["num_repeat"], cfg["middle_features_dim"],
                             cfg["channels_base"], cfg["image_size"])
     generator1.to(device)
     print(generator1)
+    print("Generator 1 parameter count: {}".format(count_parameters(generator1)))
 
     cfg = config["train"]["generator1"]
     generator1_optimizer = optim.Adam(generator1.parameters(), lr=cfg["lr"],
@@ -96,7 +101,7 @@ def get_trainer(config, device=torch.device("cuda")):
     return trainer
 
 
-def run(config, device=torch.device("cuda")):
+def run(config, device=torch.device("cuda"), mobilenet=False):
     train_data_loader = get_data_loader(config)
-    trainer = get_trainer(config, device)
+    trainer = get_trainer(config, device, mobilenet)
     trainer.run(train_data_loader, max_epochs=config["train"]["num_epoch"])

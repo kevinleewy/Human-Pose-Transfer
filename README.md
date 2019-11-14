@@ -147,11 +147,19 @@ train stage 1: `python3 run.py PG2-1 --gpu_id 0 -c ./implementations/PG2/stage1.
 
 train stage 2: `python3 run.py PG2-2 -g 2 -c ./implementations/PG2/stage2.toml -o ./checkpoints/PG2-2`
 
-generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images -g 3`
+generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/stage2.toml -o ./generated_images/PG2 -g 3`
 
 generate a grid image as example: `python3 tool/generate_grid.py -r ./generated_images -o images.jpg`
 
 ![PG2 result](doc/image/PG2-origin.jpg)
+
+### Mobile PG2
+
+train stage 1: `python3 run.py PG2-1 --gpu_id 0 -c ./implementations/PG2/mobile/stage1.toml -o ./checkpoints/mPG2-1 --mobilenet`
+
+train stage 2: `python3 run.py PG2-2 -g 2 -c ./implementations/PG2/mobile/stage2.toml -o ./checkpoints/mPG2-2 --mobilenet`
+
+generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/mobile/stage2.toml -o ./generated_images/mPG2 -g 3 --mobilenet`
 
 #### Pre-trained model
 

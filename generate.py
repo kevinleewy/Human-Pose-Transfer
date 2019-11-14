@@ -26,12 +26,12 @@ def get_data_loader(config):
     print(image_dataset)
     return image_loader
 
-def make_engine(generator_name, config, device=torch.device("cuda")):
+def make_engine(generator_name, config, device=torch.device("cuda"), mobilenet=False):
     try:
         make_generator = import_module(IMPLEMENTED_GENERATOR[generator_name]).make_generator
     except KeyError:
         raise RuntimeError("not implemented generator <{}>".format(generator_name))
-    generate = make_generator(config, device)
+    generate = make_generator(config, device, mobilenet)
 
     def _step(engine, batch):
         batch = convert_tensor(batch, device)
@@ -51,7 +51,7 @@ def make_engine(generator_name, config, device=torch.device("cuda")):
                        nrow=len(images), normalize=True, padding=0)
     return engine
 
-def run(config, device=torch.device("cuda")):
+def run(config, device=torch.device("cuda"), mobilenet=False):
     train_data_loader = get_data_loader(config)
-    engine = make_engine(config["engine"], config, device)
+    engine = make_engine(config["engine"], config, device, mobilenet)
     engine.run(train_data_loader, max_epochs=1)
