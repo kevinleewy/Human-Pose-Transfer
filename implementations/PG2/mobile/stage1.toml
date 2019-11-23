@@ -33,12 +33,12 @@ first try
 
 [train]
     batch_size = 16
-    num_epoch = 2
+    num_epoch = 6
     [train.data]
         replacement = false
         flip_rate = 0.5
     [train.generator1]
-        lr = 0.00002
+        lr = 0.0001
         beta1 = 0.5
         beta2 = 0.999
 

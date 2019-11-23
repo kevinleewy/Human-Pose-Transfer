@@ -33,7 +33,7 @@ first try
         channels_base = 128
         image_size = [128, 64]
         # select the G1 path
-        pretrained_path = "./checkpoints/mPG2-1/network_G1_22000.pth"
+        pretrained_path = "./checkpoints/mPG2-1/network_G1_94000.pth"
     [model.generator2]
         weight_init_way = "xavier"
         num_skip_out_connect = 1
@@ -52,7 +52,7 @@ first try
         replacement = false
         flip_rate = 0.5
     [train.generator2]
-        lr = 0.00002
+        lr = 0.0001
         beta1 = 0.5
         beta2 = 0.999
     [train.discriminator]
