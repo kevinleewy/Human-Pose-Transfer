@@ -47,7 +47,7 @@ first try
 
 [train]
     batch_size = 16
-    num_epoch = 1
+    num_epoch = 5
     [train.data]
         replacement = false
         flip_rate = 0.5
