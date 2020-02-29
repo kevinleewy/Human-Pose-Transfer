@@ -230,6 +230,15 @@ class Generator2(nn.Module):
 
         return self.end_conv(x)
 
+    def getGFV(self, condition_image, stage1_image):
+        x = torch.cat([condition_image, stage1_image], dim=1)
+        x = self.start_conv(x)
+
+        for i, block in enumerate(self.encoder):
+            _, x = block(x)
+
+        return x
+
 
 class Discriminator(nn.Module):
     def __init__(self, in_channels=3, channel_base=64, market_or_DF=True, weight_init_way=None):
