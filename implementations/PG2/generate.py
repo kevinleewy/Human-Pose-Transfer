@@ -13,7 +13,8 @@ def make_generator(config, device=torch.device("cuda"), mobilenet=False):
         generator1.load_state_dict(torch.load(cfg["pretrained_path"], map_location="cpu"))
 
         cfg = config["model"]["generator2"]
-        generator2 = MobileGenerator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"])
+        generator2 = Generator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"])
+        #generator2 = MobileGenerator2(3 + 3, cfg["channels_base"], cfg["num_repeat"], cfg["num_skip_out_connect"])
         generator2.to(device)
         generator2.load_state_dict(torch.load(cfg["pretrained_path"], map_location="cpu"))
     else:    
@@ -31,12 +32,16 @@ def make_generator(config, device=torch.device("cuda"), mobilenet=False):
     print("Generator 1 parameter count: {}".format(count_parameters(generator1)))
     print("Generator 2 parameter count: {}".format(count_parameters(generator2)))
 
-    def generate(batch):
+    def generate(batch, gfv=False):
         with torch.no_grad():
             generator1.eval()
             generator2.eval()
-            generated_img_1 = generator1(batch["condition_img"], batch["target_bone"])
-            generated_img = generator2(batch["condition_img"], generated_img_1) + generated_img_1
-            return generated_img
+            g1_out = generator1(batch["condition_img"], batch["target_bone"])
+
+            if gfv:
+                return generator2.getGFV(batch["condition_img"], g1_out)
+
+            generated_img = generator2(batch["condition_img"], g1_out) + g1_out
+            return generated_img, g1_out  
 
     return generate

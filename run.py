@@ -38,7 +38,8 @@ def update_config(config, config_update):
 IMPLEMENTED_ENGINE = {
     "PG2-1": "implementations.PG2.train1",
     "PG2-2": "implementations.PG2.train2",
-    "PG2-Generator": "generate"
+    "PG2-Generator": "generate",
+    "PG2-GFV-Generator": "generateGFV"
 }
 
 
@@ -50,6 +51,7 @@ def parse_argument():
     parser.add_argument("-o", "--output", type=str, help="output path", required=True)
     parser.add_argument("-t", "--toml", action="append", type=str, help="overwrite toml config use cli arg")
     parser.add_argument("-m", "--mobilenet", action='store_true', help="use mobile PG-2")
+    parser.add_argument("-v", "--verbose", action='store_true', help="high verbosity")
     options = parser.parse_args()
     return options
 
@@ -94,14 +96,14 @@ def main():
     save_config(config, config["output"])
 
     engine = import_module(IMPLEMENTED_ENGINE[options.implementation])
-    if IMPLEMENTED_ENGINE[options.implementation] == "generate":
-        config["engine"] = options.implementation
+    if IMPLEMENTED_ENGINE[options.implementation] in ["generate", "generateGFV"]:
+        config["engine"] = "PG2-Generator"
     else:
         save_config(config, config["output"])
 
     print("#" * 80, "\n")
 
-    engine.run(config, device, options.mobilenet)
+    engine.run(config, options, device)
 
 
 if __name__ == '__main__':
