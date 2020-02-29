@@ -26,7 +26,7 @@ def get_data_loader(config):
     print(image_dataset)
     return image_loader
 
-def make_engine(generator_name, config, device=torch.device("cuda"), mobilenet=False):
+def make_engine(generator_name, config, device=torch.device("cuda"), mobilenet=False, verbose=False):
     try:
         make_generator = import_module(IMPLEMENTED_GENERATOR[generator_name]).make_generator
     except KeyError:
@@ -35,7 +35,14 @@ def make_engine(generator_name, config, device=torch.device("cuda"), mobilenet=F
 
     def _step(engine, batch):
         batch = convert_tensor(batch, device)
-        generated_images = generate(batch)
+        generated_images, coarse_generated_images = generate(batch)
+
+        if verbose:
+            bone = batch["target_bone"].round().sum(dim=1, keepdim=True).repeat_interleave(repeats=3, dim=1)
+            bone = torch.where(bone >= 1, torch.ones_like(bone), torch.zeros_like(bone))
+            return (batch["condition_path"], batch["target_path"]), \
+               (batch["condition_img"], bone, batch["target_mask"], coarse_generated_images, generated_images, batch["target_img"])
+
         return (batch["condition_path"], batch["target_path"]), \
                (batch["condition_img"], batch["target_img"], generated_images)
 
@@ -51,7 +58,7 @@ def make_engine(generator_name, config, device=torch.device("cuda"), mobilenet=F
                        nrow=len(images), normalize=True, padding=0)
     return engine
 
-def run(config, device=torch.device("cuda"), mobilenet=False):
+def run(config, options, device=torch.device("cuda")):
     train_data_loader = get_data_loader(config)
-    engine = make_engine(config["engine"], config, device, mobilenet)
+    engine = make_engine(config["engine"], config, device, options.mobilenet, options.verbose)
     engine.run(train_data_loader, max_epochs=1)

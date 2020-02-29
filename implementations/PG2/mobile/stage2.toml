@@ -33,14 +33,14 @@ first try
         channels_base = 128
         image_size = [128, 64]
         # select the G1 path
-        pretrained_path = "./checkpoints/mPG2-1/network_G1_94000.pth"
+        pretrained_path = "./checkpoints/mPG2-1/network_G1_124000.pth"
     [model.generator2]
         weight_init_way = "xavier"
         num_skip_out_connect = 1
         num_repeat = 3
         channels_base = 128
         # only used when generating images.
-        pretrained_path = "./checkpoints/mPG2-2/network_G2_14000.pth"
+        pretrained_path = "./checkpoints/PG2-2/network_G2_14000.pth"
     [model.discriminator]
         # tflib means the way used in author of paper's code.
         weight_init_way = "tflib"
