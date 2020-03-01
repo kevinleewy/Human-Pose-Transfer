@@ -164,6 +164,8 @@ generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/mobile/s
 ### RL-GAN-NET
 generate GFV: `python3 run.py PG2-GFV-Generator -c ./implementations/PG2/stage2.toml -o ./generated_gfvs/PG2 -g 0`
 
+train L-GAN: `python3 run.py PG2-LGAN -c ./implementations/LGAN/lgan.toml -o ./checkpoints/LGAN-PG2 -g 0`
+
 #### Pre-trained model
 
 Please note that this is *NOT* the best result, the result is just not bad. it can not be used in academic papers.

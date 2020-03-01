@@ -1,0 +1,72 @@
+title = "PG2"
+
+description = """
+first try
+"""
+
+[dataset]
+    name = "market"
+    [dataset.path.train]
+        image = "./generated_gfvs/PG2/"
+    [dataset.path.test]
+        image = "./generated_gfvs/PG2/"
+
+[loss]
+    [loss.mask_l1]
+        weight = 10
+        mask_ratio = 1
+    [loss.gan]
+        weight = 1
+
+[model]
+    [model.generator1]
+        num_repeat = 5
+        middle_features_dim = 64
+        channels_base = 128
+        image_size = [128, 64]
+        # select the G1 path
+        pretrained_path = "./checkpoints/PG2-1/network_G1_22000.pth"
+    [model.generator2]
+        weight_init_way = "xavier"
+        num_skip_out_connect = 1
+        num_repeat = 3
+        channels_base = 128
+        # only used when generating images.
+        pretrained_path = "./checkpoints/PG2-2/network_G2_14000.pth"
+    [model.discriminator]
+        # tflib means the way used in author of paper's code.
+        weight_init_way = "tflib"
+    [model.lgan]
+        max_action = 10
+        model = "sagan"
+        adv_loss = "wgan-gp"
+        imsize = 32
+        g_num = 5
+        z_dim = 1
+        g_conv_dim = 64
+        d_conv_dim = 64
+        lambda_gp = 10
+
+[train]
+    batch_size = 32
+    total_step = 1000000
+    d_iters = 5
+    num_workers = 2
+    g_lr = 0.0001
+    d_lr = 0.0001
+    lr_decay = 0.0
+    beta1 = 0.5
+    beta2 = 0.9
+
+[log]
+    log_step = 100
+    model_save_step = 10
+    use_tensorboard = 0
+    loss_freq = 50
+    check_freq = 1000
+    [log.model_checkpoint]
+        n_saved = 15
+        save_interval = 1000
+    [log.verify]
+        batch_size = 4
+        shuffle = true

@@ -39,7 +39,8 @@ IMPLEMENTED_ENGINE = {
     "PG2-1": "implementations.PG2.train1",
     "PG2-2": "implementations.PG2.train2",
     "PG2-Generator": "generate",
-    "PG2-GFV-Generator": "generateGFV"
+    "PG2-GFV-Generator": "generateGFV",
+    "PG2-LGAN": "implementations.LGAN.main"
 }
 
 
