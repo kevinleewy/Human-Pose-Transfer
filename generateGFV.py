@@ -53,7 +53,7 @@ def make_engine(generator_name, config, device=torch.device("cuda"), mobilenet=F
             file_name = os.path.join(config["output"], "{}___{}_vis.npy".format(names[0][i], names[1][i]))
 
             #np.save file is smaller than torch.save
-            np.save(file_name, gfvs[i])
+            np.save(file_name, gfvs.cpu()[i])
     return engine
 
 def run(config, options, device=torch.device("cuda")):

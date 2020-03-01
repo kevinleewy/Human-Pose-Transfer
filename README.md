@@ -159,10 +159,10 @@ train stage 1: `python3 run.py PG2-1 --gpu_id 0 -c ./implementations/PG2/mobile/
 
 train stage 2: `python3 run.py PG2-2 -g 2 -c ./implementations/PG2/mobile/stage2.toml -o ./checkpoints/mPG2-2 --mobilenet`
 
-generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/mobile/stage2.toml -o ./generated_images/mPG2 -g 3 --mobilenet -t "generated_limit=100"`
+generate images: `python3 run.py PG2-Generator -c ./implementations/PG2/mobile/stage2.toml -o ./generated_images/mPG2 -g 0 --mobilenet -t "generated_limit=100"`
 
 ### RL-GAN-NET
-generate GFV: `python3 run.py PG2-GFV-Generator -c ./implementations/PG2/stage2.toml -o ./generated_gfvs/PG2 -g 3`
+generate GFV: `python3 run.py PG2-GFV-Generator -c ./implementations/PG2/stage2.toml -o ./generated_gfvs/PG2 -g 0`
 
 #### Pre-trained model
 
