@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 
 from .Datasets.GFVDataset import GFVDataset
 from .data_loader import Data_Loader
-from .parameter import *
+# from .parameter import *
 from .trainer import Trainer
 from .utils import make_folder
 

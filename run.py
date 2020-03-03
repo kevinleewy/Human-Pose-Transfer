@@ -40,7 +40,8 @@ IMPLEMENTED_ENGINE = {
     "PG2-2": "implementations.PG2.train2",
     "PG2-Generator": "generate",
     "PG2-GFV-Generator": "generateGFV",
-    "PG2-LGAN": "implementations.LGAN.main"
+    "PG2-LGAN": "implementations.LGAN.main",
+    "PG2-RL-GAN-Net": "implementations.RL.train"
 }
 
 
@@ -108,4 +109,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    trainer = get_trainer(config, options, device)
+    trainer.train()

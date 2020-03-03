@@ -221,8 +221,8 @@ class Trainer(object):
 
     def build_model(self):
 
-        self.G = Generator(self.batch_size,self.imsize, self.z_dim, self.g_conv_dim).to(self.device)
-        self.D = Discriminator(self.batch_size,self.imsize, self.d_conv_dim).to(self.device)
+        self.G = Generator(self.imsize, self.z_dim, self.g_conv_dim).to(self.device)
+        self.D = Discriminator(self.imsize, self.d_conv_dim).to(self.device)
         if self.parallel:
             self.G = nn.DataParallel(self.G)
             self.D = nn.DataParallel(self.D)

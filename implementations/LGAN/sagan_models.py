@@ -45,7 +45,7 @@ class Self_Attn(nn.Module):
 class Generator(nn.Module):
     """Generator."""
 
-    def __init__(self, batch_size, image_size=64, z_dim=100, conv_dim=64):
+    def __init__(self, image_size=64, z_dim=100, conv_dim=64):
         super(Generator, self).__init__()
         self.imsize = image_size
 
@@ -148,7 +148,7 @@ class Generator(nn.Module):
 class Discriminator(nn.Module):
     """Discriminator, Auxiliary Classifier."""
 
-    def __init__(self, batch_size=64, image_size=64, conv_dim=64):
+    def __init__(self, image_size=64, conv_dim=64):
         super(Discriminator, self).__init__()
         self.imsize = image_size
         self.in_channels = 384
