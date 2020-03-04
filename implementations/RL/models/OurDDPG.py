@@ -3,9 +3,6 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
-import utils
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Re-tuned version of Deep Deterministic Policy Gradients (DDPG)
 # Paper: https://arxiv.org/abs/1509.02971
@@ -46,7 +43,8 @@ class Critic(nn.Module):
 
 
 class DDPG(object):
-	def __init__(self, state_dim, action_dim, max_action):
+	def __init__(self, state_dim, action_dim, max_action, device):
+		self.device = device
 		self.actor = Actor(state_dim, action_dim, max_action).to(device)
 		self.actor_target = Actor(state_dim, action_dim, max_action).to(device)
 		self.actor_target.load_state_dict(self.actor.state_dict())
@@ -59,7 +57,7 @@ class DDPG(object):
 
 
 	def select_action(self, state):
-		state = torch.FloatTensor(state.reshape(1, -1)).to(device)
+		state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
 		return self.actor(state).cpu().data.numpy().flatten()
 
 
@@ -69,11 +67,11 @@ class DDPG(object):
 
 			# Sample replay buffer 
 			x, y, u, r, d = replay_buffer.sample(batch_size)
-			state = torch.FloatTensor(x).to(device)
-			action = torch.FloatTensor(u).to(device)
-			next_state = torch.FloatTensor(y).to(device)
-			done = torch.FloatTensor(1 - d).to(device)
-			reward = torch.FloatTensor(r).to(device)
+			state = torch.FloatTensor(x).to(self.device)
+			action = torch.FloatTensor(u).to(self.device)
+			next_state = torch.FloatTensor(y).to(self.device)
+			done = torch.FloatTensor(1 - d).to(self.device)
+			reward = torch.FloatTensor(r).to(self.device)
 
 			# Compute the target Q value
 			target_Q = self.critic_target(next_state, self.actor_target(next_state))

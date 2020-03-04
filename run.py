@@ -109,5 +109,4 @@ def main():
 
 
 if __name__ == '__main__':
-    trainer = get_trainer(config, options, device)
-    trainer.train()
+    main()

@@ -211,7 +211,7 @@ class Generator2(nn.Module):
         if weight_init_way is not None:
             self.apply(weights_init.select(weight_init_way))
 
-    def forward(self, condition_image, stage1_image):
+    def forward(self, condition_image, stage1_image, intercept_gfv=None):
         x = torch.cat([condition_image, stage1_image], dim=1)
         x = self.start_conv(x)
 
@@ -220,6 +220,10 @@ class Generator2(nn.Module):
             skip_conn_feat, x = block(x)
             if i > self.num_skip_out_connect - 1:
                 skip_connection_list.append(skip_conn_feat)
+
+        if intercept_gfv is not None:
+            assert x.size() == intercept_gfv.size()
+            x = intercept_gfv
 
         for i, block in enumerate(self.decoder):
             if i < self.num_repeat - self.num_skip_out_connect:

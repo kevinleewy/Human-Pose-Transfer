@@ -3,9 +3,6 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
-import utils
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Implementation of Deep Deterministic Policy Gradients (DDPG)
 # Paper: https://arxiv.org/abs/1509.02971
@@ -18,8 +15,8 @@ class Actor(nn.Module):
 
 		self.l1 = nn.Linear(state_dim, 400)#400
 		self.l2 = nn.Linear(400, 400)
-		self.l2_additional = nn.Linear(400, 300)
-		self.l3 = nn.Linear(300, action_dim)
+		self.l3 = nn.Linear(400, 300)
+		self.l4 = nn.Linear(300, action_dim)
 		
 		self.max_action = max_action
 
@@ -27,8 +24,8 @@ class Actor(nn.Module):
 	def forward(self, x):
 		x = F.relu(self.l1(x))
 		x = F.relu(self.l2(x))
-		x = F.relu(self.l2_additional(x))
-		x = self.max_action * torch.tanh(self.l3(x)) 
+		x = F.relu(self.l3(x))
+		x = self.max_action * torch.tanh(self.l4(x)) 
 		return x 
 
 
@@ -38,20 +35,20 @@ class Critic(nn.Module):
 
 		self.l1 = nn.Linear(state_dim, 400)
 		self.l2 = nn.Linear(400 + action_dim, 300)
-		self.l3_additional = nn.Linear(300, 300)
-		self.l3 = nn.Linear(300, 1)
+		self.l3 = nn.Linear(300, 300)
+		self.l4 = nn.Linear(300, 1)
 
 
 	def forward(self, x, u):
 		x = F.relu(self.l1(x))
 		x = F.relu(self.l2(torch.cat([x, u], 1)))
-		x = self.l3_additional(x)
 		x = self.l3(x)
+		x = self.l4(x)
 		return x 
 
 
 class DDPG(object):
-	def __init__(self, state_dim, action_dim, max_action,device):
+	def __init__(self, state_dim, action_dim, max_action, device):
 		self.device = device
 		self.actor = Actor(state_dim, action_dim, max_action).to(device)
 		self.actor_target = Actor(state_dim, action_dim, max_action).to(device)
@@ -65,7 +62,7 @@ class DDPG(object):
 
 
 	def select_action(self, state):
-		state = torch.FloatTensor(state.reshape(1, -1)).to(device)
+		state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
 		return self.actor(state).cpu().data.numpy().flatten()
 
 
@@ -75,11 +72,11 @@ class DDPG(object):
 
 			# Sample replay buffer 
 			x, y, u, r, d = replay_buffer.sample(batch_size)
-			state = torch.FloatTensor(x).to(device)
-			action = torch.FloatTensor(u).to(device)
-			next_state = torch.FloatTensor(y).to(device)
-			done = torch.FloatTensor(1 - d).to(device)
-			reward = torch.FloatTensor(r).to(device)
+			state = torch.FloatTensor(x).to(self.device)
+			action = torch.FloatTensor(u).to(self.device)
+			next_state = torch.FloatTensor(y).to(self.device)
+			done = torch.FloatTensor(1 - d).to(self.device)
+			reward = torch.FloatTensor(r).to(self.device)
 
 			# Compute the target Q value
 			target_Q = self.critic_target(next_state, self.actor_target(next_state))

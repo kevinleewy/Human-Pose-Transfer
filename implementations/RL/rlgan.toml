@@ -59,12 +59,12 @@ first try
         attempts = 5
         policy_name = "DDPG"
         env_name = "RLGAN"
-        state_dim = 128
+        state_dim = 196608
         max_action = 10
         
 
 [train]
-    batch_size = 16
+    batch_size = 1
     num_epoch = 1
     num_workers = 8
     start_timesteps = 10000

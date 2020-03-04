@@ -166,6 +166,8 @@ generate GFV: `python3 run.py PG2-GFV-Generator -c ./implementations/PG2/stage2.
 
 train L-GAN: `python3 run.py PG2-LGAN -c ./implementations/LGAN/lgan.toml -o ./checkpoints/LGAN-PG2 -g 0`
 
+train RL agent: `python3 run.py PG2-RL-GAN-Net -c ./implementations/RL/rlgan.toml -o ./checkpoints/RL-GAN-PG2 -g 0`
+
 #### Pre-trained model
 
 Please note that this is *NOT* the best result, the result is just not bad. it can not be used in academic papers.

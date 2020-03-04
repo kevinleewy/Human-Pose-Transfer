@@ -98,7 +98,7 @@ def main(args,vis_Valid,vis_Valida):
 
     chamfer = ChamferLoss(args)
     nll = NLL()
-    mse = MSE(reduction = 'elementwise_mean')
+    mse = MSE(reduction = 'mean')
     norm = Norm(dims=args.z_dim)
 
     epoch = 0
@@ -147,7 +147,7 @@ class envs(nn.Module):
         super(envs,self).__init__()
 
         self.nll = NLL()
-        self.mse = MSE(reduction='elementwise_mean')
+        self.mse = MSE(reduction='mean')
         self.norm = Norm(dims=args.z_dim)
         self.chamfer = ChamferLoss(args)
         self.epoch = 0

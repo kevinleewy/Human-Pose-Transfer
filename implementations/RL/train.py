@@ -1,5 +1,3 @@
-from ignite.utils import convert_tensor
-
 import numpy as np
 import os
 import sys
@@ -11,13 +9,13 @@ import torch.utils.data
 from tqdm import tqdm
 
 # Local Imports
-from .models.lossess import NLL, MSE, Norm
+from .models.losses import NLL, MSE, Norm
 from .models import DDPG, OurDDPG, TD3
-import utils
+from .utils import AverageMeter, ReplayBuffer
 from ..LGAN.sagan_models import Generator, Discriminator
 from ..PG2.data import get_data_loader, get_val_data_pairs
 from ..PG2.loss import MaskL1Loss
-from ..PG2.model import Generator2, Generator1, Discriminator
+from ..PG2.model import Generator2, Generator1
 from ..PG2.mobile.model import Generator2  as MobileGenerator2, Generator1 as MobileGenerator1
 
 # Set RNG seed
@@ -33,11 +31,12 @@ def evaluate_policy(policy, data_loader, env, config, device='cpu', eval_episode
 
     #for i,(input) in enumerate(data_loader):
     for i in range (0, eval_episodes):
-        try:
-            input = next(dataloader_iterator)
-        except:
-            dataloader_iterator = iter(data_loader)
-            input = next(dataloader_iterator)
+        input = {}
+        for key in data_loader.keys():
+            if key.endswith('path'):
+                input[key] = [data_loader[key][i]]
+            else:
+                input[key] = data_loader[key][i].unsqueeze(0)
 
         obs = env.agent_input(input)
         done = False
@@ -46,7 +45,7 @@ def evaluate_policy(policy, data_loader, env, config, device='cpu', eval_episode
             # Action By Agent and collect reward
             action = policy.select_action(np.array(obs))
             action = torch.tensor(action).to(device).unsqueeze(dim=0)
-            _, _, reward, done, _ = env(input, action, render=render, disp =True)
+            _, _, reward, done, _ = env(input, action, render=render, printf=print)
             avg_reward += reward
 
         if i+1 >= eval_episodes:
@@ -69,7 +68,13 @@ class Trainer(object):
         self.model_save_path = config["output"]
 
         self.train_data_loader = get_data_loader(config)
-        self.val_data_pair = convert_tensor(get_val_data_pairs(config), device)
+        # condition_path 16
+        # condition_img torch.Size([16, 3, 128, 64])
+        # condition_bone torch.Size([16, 18, 128, 64])
+        # condition_mask torch.Size([16, 3, 128, 64])
+        # condition_key_points torch.Size([16, 18, 2])
+
+        self.val_data_pair = get_val_data_pairs(config)
 
         if options.mobilenet:
             cfg = config["model"]["generator1"]
@@ -98,14 +103,14 @@ class Trainer(object):
         cfg = config["model"]["lgan"]
         self.lgan_G = Generator(cfg["imsize"], cfg["z_dim"], cfg["g_conv_dim"]).to(self.device)
         self.lgan_D = Discriminator(cfg["imsize"], cfg["d_conv_dim"]).to(self.device)
-        self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
-        self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
+        # self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
+        # self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
         self.action_dim = cfg["z_dim"]
 
         cfg = config["model"]["rl"]
         self.env_name = cfg["env_name"]
         self.policy_name = cfg["policy_name"]
-        self.state_dim = cfg["state_dim"]
+        self.state_dim = cfg["state_dim"] # 196,608 = 384 x 32 x 16
         self.max_action = cfg["max_action"]
 
         cfg = config["train"]
@@ -123,6 +128,8 @@ class Trainer(object):
         self.policy_freq = cfg["policy_freq"]
         self.max_episodes_steps = cfg["max_episodes_steps"]
 
+        self.val_batch_size = config["log"]["verify"]["batch_size"]
+
 
     def train(self):
 
@@ -131,11 +138,11 @@ class Trainer(object):
         self.lgan_G.eval()
         self.lgan_D.eval()
 
-        epoch_size = len(self.val_data_pair)
+        epoch_size = self.val_batch_size
 
         file_name = "%s_%s" % (self.policy_name, self.env_name)
 
-        if os.path.exists(self.model_save_path):
+        if not os.path.exists(self.model_save_path):
             os.makedirs(self.model_save_path)
 
         env = envs(self.config, self.lgan_G, self.lgan_D, self.generator1, self.generator2, epoch_size, self.device)
@@ -144,23 +151,28 @@ class Trainer(object):
         if self.policy_name == "TD3":
             policy = TD3.TD3(self.state_dim, self.action_dim, self.max_action)
         elif self.policy_name == "OurDDPG":
-            policy = OurDDPG.DDPG(self.state_dim, self.action_dim, self.max_action)
+            policy = OurDDPG.DDPG(self.state_dim, self.action_dim, self.max_action, self.device)
         elif self.policy_name == "DDPG":
             policy = DDPG.DDPG(self.state_dim, self.action_dim, self.max_action, self.device)
 
-        replay_buffer = utils.ReplayBuffer()
+        replay_buffer = ReplayBuffer()
 
-        evaluations = [evaluate_policy(policy, self.val_data_pair, env, self.config, self.device)]
+        evaluations = [evaluate_policy(policy, self.val_data_pair, env, self.config, self.device, eval_episodes=self.val_batch_size)]
 
         total_timesteps = 0
         timesteps_since_eval = 0
         episode_num = 0
+
+        # Reset environment
         done = False
+        episode_reward = 0
+        episode_timesteps = 0
+
         env.reset(epoch_size=len(self.train_data_loader))
 
         while total_timesteps < self.max_timesteps:
 
-            with tqdm(enumerate(self.train_data_loader), total=len(self.train_data_loader)) as pbar: # progress bar
+            with tqdm(enumerate(self.train_data_loader), total=len(self.train_data_loader), position=0, leave=True) as pbar: # progress bar
                 for i, input in pbar:
 
                     if done:
@@ -176,7 +188,7 @@ class Trainer(object):
                         if timesteps_since_eval >= self.eval_freq:
                             timesteps_since_eval %= self.eval_freq
 
-                            evaluations.append(evaluate_policy(policy, self.val_data_pair, env, self.config, self.device, render=False))
+                            evaluations.append(evaluate_policy(policy, self.val_data_pair, env, self.config, self.device, eval_episodes=self.val_batch_size, render=False))
 
                             if self.save_models:
                                 policy.save(file_name, directory=self.model_save_path)
@@ -217,14 +229,14 @@ class Trainer(object):
 
                     # env.render()
 
-                    new_obs, _, reward, done, _ = env(input, action_t, disp=True)
+                    new_obs, _, reward, done, _ = env(input, action_t, printf=pbar.set_description)
 
                     # new_obs, reward, done, _ = env.step(action)
                     done_bool = 0 if episode_timesteps + 1 == self.max_episodes_steps else float(done)
                     episode_reward += reward
 
                     # Store data in replay buffer
-                    replay_buffer.add((obs, new_obs, action, reward, done_bool))
+                    replay_buffer.add((obs.reshape(-1), new_obs.reshape(-1), action, reward, done_bool))
 
                     obs = new_obs
 
@@ -240,7 +252,7 @@ class envs(nn.Module):
         self.mask_l1_loss = MaskL1Loss(config["loss"]["mask_l1"]["mask_ratio"])
         self.mask_l1_loss.to(device)
         self.nll = NLL()
-        self.mse = MSE(reduction = 'elementwise_mean')
+        self.mse = MSE(reduction='mean')
         self.norm = Norm(dims=config["model"]["lgan"]["z_dim"])
 
         self.epoch = 0
@@ -252,11 +264,11 @@ class envs(nn.Module):
         self.generator2 = generator2
         self.j = 1
         self.figures = 3
-        self.attempts = config["model"]["lgan"]["rl"]["attempts"]
-        self.state_dim = config["model"]["lgan"]["rl"]["state_dim"]
+        self.attempts = config["model"]["rl"]["attempts"]
+        self.state_dim = config["model"]["rl"]["state_dim"]
         self.end = time.time()
-        self.batch_time = utils.AverageMeter()
-        self.losses = utils.AverageMeter()
+        self.batch_time = AverageMeter()
+        self.losses = AverageMeter()
         self.attempt_id =0
         self.state_prev = np.zeros([4,])
         self.iter = 0
@@ -264,42 +276,41 @@ class envs(nn.Module):
     def reset(self, epoch_size, figures=3):
         self.j = 1
         self.i = 0
+        self.epoch_size = epoch_size
         self.figures = figures
         
     def agent_input(self,input):
         with torch.no_grad():
-            input = input.to(self.device, non_blocking=True)
-            input_var = Variable(input, requires_grad=True)
-            g1_out = self.generator1(input_var["condition_img"], input_var["target_bone"])
-            gfv = self.generator2.getGFV(input_var["condition_img"], g1_out)
+            condition_img = Variable(input["condition_img"].to(self.device, non_blocking=True), requires_grad=True)
+            target_bone = Variable(input["target_bone"].to(self.device, non_blocking=True), requires_grad=True)
+            g1_out = self.generator1(condition_img, target_bone)
+            gfv = self.generator2.getGFV(condition_img, g1_out)
         return gfv
 
-    def forward(self, input, action, render=False, disp=False):
+    def forward(self, input, action, render=False, printf=None):
 
-        # input = convert_tensor(input, device)
-        print(input)
+        condition_img = Variable(input["condition_img"].to(self.device, non_blocking=True), requires_grad=True)
+        target_bone = Variable(input["target_bone"].to(self.device, non_blocking=True), requires_grad=True)
+        target_mask = Variable(input["target_mask"].to(self.device, non_blocking=True), requires_grad=True)
 
         with torch.no_grad():
 
             # Encoder Input
-            input = input.to(self.device, non_blocking=True)
-            input_var = Variable(input, requires_grad=True)
-
-            g1_out = self.generator1(input_var["condition_img"], input_var["target_bone"])
-            gfv = self.generator2.getGFV(input_var["condition_img"], g1_out)
-            g2_out = g1_out + self.generator2(batch["condition_img"], g1_out)
+            g1_out = self.generator1(condition_img, target_bone)
+            gfv = self.generator2.getGFV(condition_img, g1_out)
+            g2_out = g1_out + self.generator2(condition_img, g1_out)
             
             # Generator Input
-            z = Variable(action, requires_grad=True).cuda()
+            z = Variable(action, requires_grad=True).to(self.device)
 
             # Generator Output
-            out_GD, _ = self.lgan_G(z)
-            out_G = torch.squeeze(out_GD, dim=1)
-            out_G = out_G.contiguous().view(-1, self.state_dim)
-            g2_out_G = self.model_decoder(out_G)
+            out_G, _ = self.lgan_G(z)
+            # out_G = torch.squeeze(out_GD, dim=1)
+            # out_G = out_G.contiguous().view(-1, 384, 32, 16)
+            g2_out_G = g1_out + self.generator2(condition_img, g1_out, out_G)
 
             # Discriminator Output
-            out_D, _ = self.lgan_D(out_GD)
+            out_D, _ = self.lgan_D(out_G)
 
         # Discriminator Loss
         loss_D = self.nll(out_D)
@@ -311,7 +322,7 @@ class envs(nn.Module):
         loss_norm = self.norm(z)
 
         # Chamfer loss
-        mask_l1_loss = self.mask_l1_loss(g2_out_G, g2_out, input["target_mask"])
+        mask_l1_loss = self.mask_l1_loss(g2_out_G, g2_out, target_mask)
 
         # States Formulation
         state_curr = np.array([
@@ -340,8 +351,8 @@ class envs(nn.Module):
         self.end = time.time()
 
 
-        if disp:
-            print('[{4}][{0}/{1}]\t Reward: {2}\t States: {3}'.format(self.i, self.epoch_size, reward, state_curr, self.iter))
+        if printf is not None:
+            printf('[{4}][{0}/{1}]\t Reward: {2}\t States: {3}'.format(self.i, self.epoch_size, reward, state_curr, self.iter))
             self.i += 1
             if(self.i >= self.epoch_size):
                 self.i = 0
