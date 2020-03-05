@@ -24,32 +24,29 @@ np.random.seed(5)
 
 def evaluate_policy(policy, data_loader, env, config, device='cpu', eval_episodes=6, render=False):
     avg_reward = 0.
-    env.reset(epoch_size=len(data_loader), figures=8) # reset the visdom and set number of figures
+    env.reset(epoch_size=eval_episodes, figures=8) # reset the visdom and set number of figures
 
-    # with tqdm(enumerate(self.data_loader), total=len(self.data_loader)) as pbar: # progress bar
-    #     for i, real_images in pbar:
+    with tqdm(range(eval_episodes)) as pbar:
+        for i in pbar:
+            input = {}
+            for key in data_loader.keys():
+                if key.endswith('path'):
+                    input[key] = [data_loader[key][i]]
+                else:
+                    input[key] = data_loader[key][i].unsqueeze(0)
 
-    #for i,(input) in enumerate(data_loader):
-    for i in range (0, eval_episodes):
-        input = {}
-        for key in data_loader.keys():
-            if key.endswith('path'):
-                input[key] = [data_loader[key][i]]
-            else:
-                input[key] = data_loader[key][i].unsqueeze(0)
+            obs = env.agent_input(input)
+            done = False
 
-        obs = env.agent_input(input)
-        done = False
+            while not done:
+                # Action By Agent and collect reward
+                action = policy.select_action(np.array(obs))
+                action = torch.tensor(action).to(device).unsqueeze(dim=0)
+                _, _, reward, done, _ = env(input, action, render=render, printf=pbar.set_description)
+                avg_reward += reward
 
-        while not done:
-            # Action By Agent and collect reward
-            action = policy.select_action(np.array(obs))
-            action = torch.tensor(action).to(device).unsqueeze(dim=0)
-            _, _, reward, done, _ = env(input, action, render=render, printf=print)
-            avg_reward += reward
-
-        if i+1 >= eval_episodes:
-            break
+            if i+1 >= eval_episodes:
+                break
 
     avg_reward /= eval_episodes
 
@@ -66,14 +63,8 @@ class Trainer(object):
         self.device = device
 
         self.model_save_path = config["output"]
-
+        
         self.train_data_loader = get_data_loader(config)
-        # condition_path 16
-        # condition_img torch.Size([16, 3, 128, 64])
-        # condition_bone torch.Size([16, 18, 128, 64])
-        # condition_mask torch.Size([16, 3, 128, 64])
-        # condition_key_points torch.Size([16, 18, 2])
-
         self.val_data_pair = get_val_data_pairs(config)
 
         if options.mobilenet:
@@ -103,8 +94,8 @@ class Trainer(object):
         cfg = config["model"]["lgan"]
         self.lgan_G = Generator(cfg["imsize"], cfg["z_dim"], cfg["g_conv_dim"]).to(self.device)
         self.lgan_D = Discriminator(cfg["imsize"], cfg["d_conv_dim"]).to(self.device)
-        # self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
-        # self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
+        self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
+        self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
         self.action_dim = cfg["z_dim"]
 
         cfg = config["model"]["rl"]
@@ -144,7 +135,7 @@ class Trainer(object):
 
         if not os.path.exists(self.model_save_path):
             os.makedirs(self.model_save_path)
-
+        
         env = envs(self.config, self.lgan_G, self.lgan_D, self.generator1, self.generator2, epoch_size, self.device)
 
         # Initialize policy
@@ -247,6 +238,10 @@ class Trainer(object):
 class envs(nn.Module):
     def __init__(self, config, lgan_G, lgan_D, generator1, generator2, epoch_size, device='cpu'):
         super(envs,self).__init__()
+
+        # Logging
+        self.log_freq = config["log"]["check_freq"]
+        self.log_path = os.path.join(config["output"], 'train.log')
 
         self.device = device
         self.mask_l1_loss = MaskL1Loss(config["loss"]["mask_l1"]["mask_ratio"])
@@ -351,12 +346,19 @@ class envs(nn.Module):
         self.end = time.time()
 
 
+        # Display stats
+        s = '[{4}][{0}/{1}]\t Reward: {2}\t States: {3}'.format(self.i, self.epoch_size, reward, state_curr, self.iter)
         if printf is not None:
-            printf('[{4}][{0}/{1}]\t Reward: {2}\t States: {3}'.format(self.i, self.epoch_size, reward, state_curr, self.iter))
-            self.i += 1
-            if(self.i >= self.epoch_size):
-                self.i = 0
-                self.iter +=1
+            printf(s)
+
+        if (self.iter * self.epoch_size + self.i) % self.log_freq == 0:
+            with open(self.log_path, 'a+') as f:
+                f.write(s + '\n')
+
+        self.i += 1
+        if(self.i >= self.epoch_size):
+            self.i = 0
+            self.iter +=1
 
         done = True
         state = out_G.detach().cpu().data.numpy().squeeze()
