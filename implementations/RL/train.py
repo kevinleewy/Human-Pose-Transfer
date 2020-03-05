@@ -263,6 +263,10 @@ class envs(nn.Module):
         self.figures = 3
         self.attempts = config["model"]["rl"]["attempts"]
         self.state_dim = config["model"]["rl"]["state_dim"]
+        self.k1 = config["model"]["rl"]["k1"]
+        self.k2 = config["model"]["rl"]["k2"]
+        self.k3 = config["model"]["rl"]["k3"]
+        self.k4 = config["model"]["rl"]["k4"]
         self.end = time.time()
         self.batch_time = AverageMeter()
         self.losses = AverageMeter()
@@ -341,7 +345,7 @@ class envs(nn.Module):
         #  1.00  1.00  1.00  1/30
         #  0.002 10.0  100.0 1.0
         #  0.2   100.0 100.0 1.0
-        reward = (reward_D * 0.01 + reward_GFV * 10.0 + reward_l1 * 100.0 + reward_norm * 0.1)
+        reward = self.k1 * reward_D + self.k2 * reward_GFV + self.k3 * reward_l1 + self.k4 * reward_norm
 
         # measured elapsed time
         self.batch_time.update(time.time() - self.end)

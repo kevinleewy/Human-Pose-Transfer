@@ -61,6 +61,10 @@ first try
         env_name = "RLGAN"
         state_dim = 196608
         max_action = 10
+        k1 = 0.01
+        k2 = 10
+        k3 = 100
+        k4 = 0.1
         
 
 [train]
