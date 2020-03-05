@@ -62,7 +62,10 @@ class DDPG(object):
 
 
 	def select_action(self, state):
-		state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
+		if torch.is_tensor(state):
+			state = state.view(1, -1).to(self.device)
+		else:
+			state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
 		return self.actor(state).cpu().data.numpy().flatten()
 
 

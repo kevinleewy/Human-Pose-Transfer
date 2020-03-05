@@ -40,7 +40,7 @@ def evaluate_policy(policy, data_loader, env, config, device='cpu', eval_episode
 
             while not done:
                 # Action By Agent and collect reward
-                action = policy.select_action(np.array(obs))
+                action = policy.select_action(obs)
                 action = torch.tensor(action).to(device).unsqueeze(dim=0)
                 _, _, reward, done, _ = env(input, action, render=render, printf=pbar.set_description)
                 avg_reward += reward
@@ -209,7 +209,7 @@ class Trainer(object):
                     #
                     # obs, _, _, _, _ = env( input, action_rand)
 
-                        action = policy.select_action(np.array(obs))
+                        action = policy.select_action(obs)
                         if self.expl_noise != 0:
                             action = (action + np.random.normal(0, self.expl_noise, size=self.action_dim)).clip(
                                 -self.max_action * np.ones(self.action_dim,), self.max_action * np.ones(self.action_dim,)
