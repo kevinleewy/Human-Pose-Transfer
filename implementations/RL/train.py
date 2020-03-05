@@ -36,6 +36,7 @@ def evaluate_policy(policy, data_loader, env, config, device='cpu', eval_episode
                     input[key] = data_loader[key][i].unsqueeze(0)
 
             obs = env.agent_input(input)
+            obs = obs.cpu().numpy()
             done = False
 
             while not done:
@@ -94,8 +95,8 @@ class Trainer(object):
         cfg = config["model"]["lgan"]
         self.lgan_G = Generator(cfg["imsize"], cfg["z_dim"], cfg["g_conv_dim"]).to(self.device)
         self.lgan_D = Discriminator(cfg["imsize"], cfg["d_conv_dim"]).to(self.device)
-        self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
-        self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
+        # self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
+        # self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
         self.action_dim = cfg["z_dim"]
 
         cfg = config["model"]["rl"]
@@ -195,6 +196,7 @@ class Trainer(object):
 
                     # Select action randomly or according to policy
                     obs = env.agent_input(input)
+                    obs = obs.cpu().numpy()
 
                     if total_timesteps < self.start_timesteps:
                         action_t = torch.FloatTensor(self.batch_size, self.action_dim).uniform_(-self.max_action, self.max_action)
