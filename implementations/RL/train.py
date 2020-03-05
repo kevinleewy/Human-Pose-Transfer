@@ -95,8 +95,8 @@ class Trainer(object):
         cfg = config["model"]["lgan"]
         self.lgan_G = Generator(cfg["imsize"], cfg["z_dim"], cfg["g_conv_dim"]).to(self.device)
         self.lgan_D = Discriminator(cfg["imsize"], cfg["d_conv_dim"]).to(self.device)
-        # self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
-        # self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
+        self.lgan_G.load_state_dict(torch.load(cfg["pretrained_G"], map_location="cpu"))
+        self.lgan_D.load_state_dict(torch.load(cfg["pretrained_D"], map_location="cpu"))
         self.action_dim = cfg["z_dim"]
 
         cfg = config["model"]["rl"]
