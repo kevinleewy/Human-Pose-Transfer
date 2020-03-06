@@ -62,9 +62,10 @@ first try
         state_dim = 196608
         max_action = 10
         k1 = 0.01
-        k2 = 10
-        k3 = 100
+        k2 = 1.0
+        k3 = 10
         k4 = 0.1
+        pretrained_path = "./checkpoints/RL-GAN-PG2"
         
 
 [train]

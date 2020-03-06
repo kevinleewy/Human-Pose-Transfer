@@ -189,7 +189,8 @@ def compute_iou(score, seg, label, visualizer, opt, input_pc):
 
 class NLL(nn.Module):
     def __init__(self):
-        super(NLL,self).__init__()
+        super(NLL, self).__init__()
+
     def forward(self,x):
      #   neglog = - F.log_softmax(x,dim=0)
         # greater the value greater the chance of being real
@@ -200,21 +201,22 @@ class NLL(nn.Module):
         return torch.mean(x)
 
 class MSE(nn.Module):
-    def __init__(self,reduction = 'mean'):
+    def __init__(self, reduction='mean'):
         super(MSE,self).__init__()
         self.reduction = reduction
+
     def forward(self,x,y):
-        mse = F.mse_loss(x,y,reduction =self.reduction)
+        mse = F.mse_loss(x, y, reduction=self.reduction)
         return mse
 
 
 class Norm(nn.Module):
     def __init__(self,dims):
-        super(Norm,self).__init__()
-        self.dims =dims
+        super(Norm, self).__init__()
+        self.dims = dims
 
     def forward(self,x):
-        z2 = torch.norm(x,p=2)
-        out = (z2-self.dims)
+        z2 = torch.norm(x, p=2)
+        out = (z2 - self.dims)
         out = out*out
         return out

@@ -104,6 +104,7 @@ class Trainer(object):
         self.policy_name = cfg["policy_name"]
         self.state_dim = cfg["state_dim"] # 196,608 = 384 x 32 x 16
         self.max_action = cfg["max_action"]
+        self.rl_pretrained_path = cfg["pretrained_path"]
 
         cfg = config["train"]
         self.batch_size = cfg["batch_size"]
@@ -146,6 +147,9 @@ class Trainer(object):
             policy = OurDDPG.DDPG(self.state_dim, self.action_dim, self.max_action, self.device)
         elif self.policy_name == "DDPG":
             policy = DDPG.DDPG(self.state_dim, self.action_dim, self.max_action, self.device)
+
+        if self.rl_pretrained_path:
+            policy.load(file_name, directory=self.rl_pretrained_path)
 
         replay_buffer = ReplayBuffer()
 
