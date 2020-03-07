@@ -73,7 +73,7 @@ first try
     num_epoch = 1
     num_workers = 8
     start_timesteps = 10000
-    eval_freq = 5000
+    eval_freq = 100000
     max_timesteps = 1000000
     save_models = 1
     batch_size_actor = 100
