@@ -144,5 +144,5 @@ class TD3(object):
 
 
 	def load(self, filename, directory):
-		self.actor.load_state_dict(torch.load('%s/%s_actor.pth' % (directory, filename)))
-		self.critic.load_state_dict(torch.load('%s/%s_critic.pth' % (directory, filename)))
+		self.actor.load_state_dict(torch.load('%s/%s_actor.pth' % (directory, filename), map_location="cpu"))
+		self.critic.load_state_dict(torch.load('%s/%s_critic.pth' % (directory, filename), map_location="cpu"))

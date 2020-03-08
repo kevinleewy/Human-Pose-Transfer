@@ -168,6 +168,8 @@ train L-GAN: `python3 run.py PG2-LGAN -c ./implementations/LGAN/lgan.toml -o ./c
 
 train RL agent: `python3 run.py PG2-RL-GAN-Net -c ./implementations/RL/rlgan.toml -o ./checkpoints/RL-GAN-PG2 -g 0`
 
+generate images: `python3 run.py PG2-RL-GAN-Net-Generator -c ./implementations/RL/rlgan.toml -o ./generated_images/RL-GAN-PG2 -g 0 -t "generated_limit=100" --verbose`
+
 #### Pre-trained model
 
 Please note that this is *NOT* the best result, the result is just not bad. it can not be used in academic papers.

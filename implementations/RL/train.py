@@ -373,6 +373,29 @@ class envs(nn.Module):
         done = True
         state = out_G.detach().cpu().data.numpy().squeeze()
         return state, _, reward, done, self.losses.avg
+    
+    def generate(self, input, action):
+
+        condition_img = Variable(input["condition_img"].to(self.device, non_blocking=True), requires_grad=True)
+        target_bone = Variable(input["target_bone"].to(self.device, non_blocking=True), requires_grad=True)
+        target_mask = Variable(input["target_mask"].to(self.device, non_blocking=True), requires_grad=True)
+
+        with torch.no_grad():
+
+            # Encoder Input
+            g1_out = self.generator1(condition_img, target_bone)
+            gfv = self.generator2.getGFV(condition_img, g1_out)
+            g2_out = g1_out + self.generator2(condition_img, g1_out)
+            
+            # Generator Input
+            z = Variable(action, requires_grad=True).to(self.device)
+
+            # Generator Output
+            out_G, _ = self.lgan_G(z)
+            g2_out_G = g1_out + self.generator2(condition_img, g1_out, out_G)
+
+        done = True
+        return g2_out_G, g1_out
 
 
 
