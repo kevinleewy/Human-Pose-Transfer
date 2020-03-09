@@ -26,7 +26,7 @@ def evaluate_policy(policy, data_loader, env, config, device='cpu', eval_episode
     avg_reward = 0.
     env.reset(epoch_size=eval_episodes, figures=8) # reset the visdom and set number of figures
 
-    with tqdm(range(eval_episodes)) as pbar:
+    with tqdm(range(eval_episodes), ncols=200) as pbar:
         for i in pbar:
             input = {}
             for key in data_loader.keys():
@@ -168,7 +168,7 @@ class Trainer(object):
 
         while total_timesteps < self.max_timesteps:
 
-            with tqdm(enumerate(self.train_data_loader), total=len(self.train_data_loader), position=0, leave=True) as pbar: # progress bar
+            with tqdm(enumerate(self.train_data_loader), total=len(self.train_data_loader), position=0, leave=True, ncols=200) as pbar: # progress bar
                 for i, input in pbar:
 
                     if done:
