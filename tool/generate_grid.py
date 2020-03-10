@@ -24,5 +24,7 @@ if __name__ == '__main__':
     parser = ArgumentParser("generate a grid image contained sampled generated images")
     parser.add_argument("-r", "--root", type=str, help="the folder that contains all generated image", required=True)
     parser.add_argument("-o", "--output", type=str, help="output image path", default="./PG2-origin.jpg")
+    parser.add_argument("-n", "--num-samples", type=int, help="number of samples", default=20)
+    parser.add_argument("--num-cols", type=int, help="number of cols", default=5)
     opt = parser.parse_args()
-    save_image(read_images(sample_images(opt.root, 20)), opt.output, nrow=5, padding=0, normalize=True)
+    save_image(read_images(sample_images(opt.root, opt.num_samples)), opt.output, nrow=opt.num_cols, padding=0, normalize=True)
